@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    
+   
+    <style>
+    #message{
+        max-height: 400px;
+        overflow: scroll;
+        overflow-x: hidden;
+    }
+    .customer strong{
+        color: red;
+    }
+    .agent strong{
+        color: blue;
+    }
+    .head,.wellcome{
+        text-align: center;
+    }
+    .well{
+        margin-top: 25px;
+    }
+    </style>
+</head>
+<body>
+
+        <div class="modal fade" id="myModal" role="dialog">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Please Enter Your Name</h4>
+                    </div>
+                    <div class="modal-body">
+                        <label for="username">Your Name:</label>
+                        <input type="text" name="username" id="username" class="form-control">
+                    </div>
+                    <div class="modal-footer">
+                        <input type="submit" id="submit" class="btn btn-success" data-dismiss="modal">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                    </div>
+                </div>
+        </div>
+   <div class="container">
+       <div class="row">
+           <div class="col-md-12">
+               <div class="col-md-8 col-md-offset-2 border">
+                   <div class="col-md-8 col-md-offset-2 well">
+                       <h3 class="col-md-12 head">Live Chat Online</h3>
+                       <div class="col-md-12">
+                           <p class="wellcome">Welcome to Chat Application</p>
+                       </div>
+                       <div class="col-md-12" id="message">
+                           <div class="col-md-8 agent" id="usreStatus">
+                           </div>
+                            <textarea name="" id="msgbox" cols="2" rows="2" style="width: 100%"></textarea>
+                       </div>               
+                   </div>            
+               </div>
+           </div>
+       </div>
+   </div>
+   <!-- Latest compiled and minified CSS -->
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+   <!-- jQuery library -->
+
+   <!-- Latest compiled JavaScript -->
+   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+   <script src="/socket.io/socket.io.js"></script>
+   <script>
+        var socket = io(); 
+    
+            var username ="";
+            
+            if(username == ""){
+                $(window).on('load',function(){
+                    $('#myModal').modal('show');
+                });
+            }
+           $(document).ready(function(){
+            
+            $('#submit').click(function(){
+                var data = $("#username").val();
+                username = data;
+                socket.emit('new user', data);
+                $("#username").val("");
+            });
+           });
+
+           socket.on("get user", function(data){
+            console.log('test', data);
+               $('#usreStatus').empty();
+               if($('#usreStatus').empty()){
+                   $("#usreStatus").append('<strong>' +data+ '</strong>'+ " : is online"+"</br>");
+                // username = data;
+               }
+                
+            });
+            
+            socket.on("disConnect", function(data){
+                console.log('datas', data);
+            //     $('#usreStatus').empty();
+            //    if($('#usreStatus').empty()){
+            //        $("#usreStatus").append('<strong>' +data+ '</strong>'+ " : is online"+"</br>");
+            //     // username = data;
+            //    }
+            // $("#usreStatus").append('<strong>' +data+ '</strong>'+ " : is offline"+"</br>");
+            
+            });
+
+            $("#msgbox").keyup(function(e){
+                if(e.keyCode == 13){
+                    socket.emit("msg", username,$("#msgbox").val());
+                    $("#msgbox").val('');
+                }
+            });
+
+            socket.on("rmsg", function(data){
+                console.log('07',data, username);    
+                if(username == data.name){
+                    console.log('01');
+                    var html = '<div class="col-md-8 agent">'+
+                        '<p><strong>'+data.name+':</strong>'+data.msg+'</p>'+
+                        '</div>';
+                }
+                else{
+                    console.log('02');
+                    var html = '<div class="col-md-8 customer">'+
+                        '<p><strong>'+data.name+':</strong>'+data.msg+'</p>'+
+                        '</div>';
+                }
+                $("#message").append(html);
+            });
+        </script>
+</body>
+</html>
